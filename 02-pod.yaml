@@ -1,0 +1,11 @@
+apiversion: v1
+kind: pod
+metadata:
+    name: mginx
+    labels:
+       namespace: expense
+spec:
+    containers:
+    - name : nginx
+      image: nginx
+    
