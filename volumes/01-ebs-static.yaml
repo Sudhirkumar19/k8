@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ebs-static-pv
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 20Gi # here capacity should be same which we have created in EBS Volume in AWS Cloud
+  csi:
+    driver: ebs.csi.aws.com
+    fstype: ext4
+    volumeHandle: vol-0c1a2b3c4d5e6f7g # here volumeHandle should be same which we have created in EBS Volume in AWS Cloud
+    # change the volumeHandle to your EBS Volume ID which you have created in AWS Cloud
