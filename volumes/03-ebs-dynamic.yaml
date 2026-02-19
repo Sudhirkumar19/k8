@@ -8,7 +8,7 @@ spec:
   storageClassName: "expense-ebs" # here storageClassName should be same as the name of the StorageClass created in 02-ebs-sc.yaml file
  # volumeName: ebs-dynamic # here volumeName should be same as the name of the persistent volume created in 01-ebs-static.yaml file if you are using static provisioning. If you are using dynamic provisioning then you can remove this line because the volume will be provisioned automatically by kubernetes when the claim is created.
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteOnce  #in EBS volume can be attached to only one node at a time, so we need to use ReadWriteOnce access mode to ensure that the volume is not attached to multiple nodes at the same time which can cause data corruption. If you want to use ReadWriteMany access mode then you need to use a different storage solution like NFS or EFS which supports multiple attachments. 
   resources:
     requests:
       storage: 3Gi # here storage should be less than or equal to the storage defined in the persistent volume above
