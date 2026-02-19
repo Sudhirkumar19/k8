@@ -1,34 +1,17 @@
-#pv (Persistent Volume)
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: ebs-static-pv
-spec:
-  accessModes:
-  - ReadWriteOnce
-  capacity:
-    storage: 20Gi # here capacity should be same which we have created in EBS Volume in AWS Cloud
-  csi:
-    driver: ebs.csi.aws.com
-    fstype: ext4
-    volumeHandle: vol-0c1a2b3c4d5e6f7g # here volumeHandle should be same which we have created in EBS Volume in AWS Cloud
-    # change the volumeHandle to your EBS Volume ID which you have created in AWS Cloud
-
---- 
 #pvc claim manifest.yaml. This pvc claim will create a claim for the persistent volume created above. The claim will be used in the deployment manifest to mount the volume to the backend application.
 
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: ebs-static
+  name: ebs-dynamic
 spec:
-  storageClassName: " " # here storageClassName should be empty string because we are using static provisioning. 
-  VolumeName: ebs-static
+  storageClassName: "expense-ebs" # here storageClassName should be same as the name of the StorageClass created in 02-ebs-sc.yaml file
+ # volumeName: ebs-dynamic # here volumeName should be same as the name of the persistent volume created in 01-ebs-static.yaml file if you are using static provisioning. If you are using dynamic provisioning then you can remove this line because the volume will be provisioned automatically by kubernetes when the claim is created.
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 20Gi # here storage should be less than or equal to the storage defined in the persistent volume above
+      storage: 3Gi # here storage should be less than or equal to the storage defined in the persistent volume above
 
 ---
 
@@ -37,9 +20,9 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: ebs-static
+  name: ebs-dynamic
   labels:
-    purpose: ebs-static
+    purpose: ebs-dynamic
     
 spec:
   nodeselector:
@@ -48,12 +31,12 @@ spec:
    - name: app
      image: centos
      volumeMounts: # docker run -v hostpath:containerpath
-     - name: ebs-static
+     - name: ebs-dynamic
        mountPath: /usr/share/nginx/html # here mountPath should be same which we have defined in the deployment manifest to mount the volume to the backend application
   volumes:
-  - name: ebs-static 
+  - name: ebs-dynamic
     persistentVolumeClaim:
-      claimName: ebs-static # here claimName should be same which we have defined in the pvc claim manifest to create the claim for the persistent volume
+      claimName: ebs-dynamic # here claimName should be same which we have defined in the pvc claim manifest to create the claim for the persistent volume
 ---
  # service manifest.yaml. This service will expose the pod created above to the other pods in the same namespace or to external clients.
 
@@ -64,7 +47,7 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-    purpose: ebs-static
+    purpose: ebs-dynamic
   ports:
   - name: nginx-svc-port
     protocol: TCP
