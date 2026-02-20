@@ -21,3 +21,25 @@ spec:
     # the need of csi drivers installation is to enable the communication between the Kubernetes cluster and the storage solution to provision and manage the volumes dynamically. The CSI drivers are responsible for provisioning the volumes, attaching and detaching the volumes to the nodes, and managing the lifecycle of the volumes. 
 
     volumeHandle: fs-0c1a2b3c4d5e6f7g # (give your created volume ID in AWS ) here volumeHandle should be same which we have created in EFS Volume in AWS Cloud. Change the volumeHandle to your EFS Volume ID which you have created in AWS Cloud. The volumeHandle is used by the CSI driver to identify the EFS volume to provision and manage the volumes dynamically.
+
+
+---
+
+#PVC claim manifest.yaml. This pvc claim will create a claim for the persistent volume created above. The claim will be used in the deployment manifest to mount the volume to the backend application.
+
+# And always pvc should refer pv with volume name, not with storage class name because in static provisioning we are creating the PV manually and we are not using the storage class to provision the volume dynamically. So in that case we need to refer the PV with volume name in the pvc claim manifest to create the claim for the persistent volume. If you are using dynamic provisioning then you can refer the PV with storage class name in the pvc claim manifest to create the claim for the persistent volume because in dynamic provisioning the PV will be created automatically by kubernetes when the claim is created and it will be bound to the claim based on the storage class name defined in the claim manifest. 
+
+apiVersion : v1
+kind: PersistentVolumeClaim
+metadat: 
+  name: expense-efs
+spec: 
+  volumeName: expense-efs # here volumeName should be same which we have created in the PV manifest to create the claim for the persistent volume. If you are using dynamic provisioning then you can remove this line because the volume will be provisioned automatically by kubernetes when the claim is created and it will be bound to the claim based on the storage class name defined in the claim manifest.
+  accessModes:
+    - ReadWriteMany # in EFS volume can be attached to multiple nodes at the same time, so we need to use ReadWriteMany access mode to ensure that the volume can be attached to multiple nodes at the same time which is required for the backend application to access the data from multiple nodes. If you want to use ReadWriteOnce access mode then you need to use a different storage solution like EBS which supports single attachment.
+  storageClassName: " " # here storageClassName should be empty string because we are using static provisioning. If you are using dynamic provisioning then you can define the storageClassName and use it in the pvc claim manifest to create the claim for the persistent volume. In that case you don't need to create the PV manually because it will be created automatically by kubernetes when the claim is created.
+  resources:
+    requests:
+      storage: 5Gi # here storage should be less than or equal to the storage defined in the persistent volume above because the claim cannot request more storage than the capacity defined in the PV. If you are using dynamic provisioning then you can define the storage as per your requirement because the PV will be created automatically by kubernetes when the claim is created and it will be bound to the claim based on the storage class name defined in the claim manifest. In that case you need to make sure that the storage defined in the claim manifest is less than or equal to the storage capacity of the EFS volume created in AWS Cloud.
+
+      
