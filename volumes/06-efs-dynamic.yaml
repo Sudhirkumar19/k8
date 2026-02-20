@@ -27,7 +27,7 @@ spec:
    - name: nginx
      image: nginx
      volumeMounts: # docker run -v hostpath:containerpath
-     - name: expense-efs
+     - name: efs-dynamic
        mountPath: /usr/share/nginx/html # here mountPath should be same which we have defined in the deployment manifest to mount the volume to the backend application
   volumes:
   - name: efs-dynamic
