@@ -1,0 +1,52 @@
+#PVC 
+apiVersion: v1
+kind: persistentVolumeClaim
+metadata: 
+  name: efs-dynamic
+spec:
+  storageClassName: "efs-expense"
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 3Gi
+
+---
+
+#pod manifest.yaml. This pod will use the pvc claim created above to mount the EFS volume 
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: efs-dynamic
+  labels:
+    purpose: efs-dynamic
+    
+spec:
+  containers:
+   - name: nginx
+     image: nginx
+     volumeMounts: # docker run -v hostpath:containerpath
+     - name: expense-efs
+       mountPath: /usr/share/nginx/html # here mountPath should be same which we have defined in the deployment manifest to mount the volume to the backend application
+  volumes:
+  - name: efs-dynamic
+    persistentVolumeClaim:
+      claimName: efs-dynamic # here claimName should be same which we have defined in the pvc claim manifest to create the claim for the persistent volume
+---
+ # service manifest.yaml. This service will expose the pod created above to the other pods in the same namespace or to external clients.
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: nginx
+spec:
+  type: LoadBalancer
+  selector:
+    purpose: efs-dynamic
+  ports:
+  - name: nginx-svc-port
+    protocol: TCP
+    port: 80 # service port
+    targetport: 80 # container port defined in the pod manifest to expose the application running in the container to the service
+    nodeport: 30007 # nodeport should be in the range of 30000-32767 to expose the service to external clients through the node port. This is optional if you want to expose the service only to other pods in the same namespace then you can remove this line. If you want to expose the service to external clients then you can keep this line and access the service through the node port defined here. You can also use LoadBalancer type service to expose the service to external clients without using node port. In that case you can remove this line and change the type to LoadBalancer.

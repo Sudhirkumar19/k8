@@ -1,0 +1,14 @@
+#EFS dynamic provisioning using StorageClass and PersistentVolumeClaim
+
+kind: StorageClass
+appVersion: storage.k8s.io/v1
+metadata:
+  name: efs-expense
+  provisioner: efs.csi.aws.com # to install drivers for EFS volume we have used the command kubectl apply -k "github.com/kubernetes-sigs/aws-efs-csi-driver/deploy/kubernetes/overlays/stable/?ref=release-1.3" command to install the EFS CSI driver in the cluster. If you are using a different storage solution then you need to install the appropriate CSI driver for that storage solution in the cluster before creating the PV and PVC claim.
+  # the need of csi drivers installation is to enable the communication between the Kubernetes cluster and the storage solution to provision and manage the volumes dynamically. The CSI drivers are responsible for provisioning the volumes, attaching and detaching the volumes to the nodes, and managing the lifecycle of the volumes.
+parameters:
+  provisioningMode: efs-ap # here provisioningMode should be efs-ap because we are using EFS volume. If you are using a different storage solution then you need to use the appropriate provisioning mode for that storage solution. For example, if you are using EBS volume then you need to use ebs-sc provisioning mode. here -ap is for access point which is a feature of EFS that allows you to create a unique entry point for each application to access the EFS volume. This is useful for multi-tenant environments where multiple applications need to access the same EFS volume without interfering with each other. If you are using a different storage solution then you need to use the appropriate provisioning mode for that storage solution. For example, if you are using EBS volume then you need to use ebs-sc provisioning mode.
+  fileSystemId: fs-92107410 # (change to your file system ID in AWS) , here fileSystemId should be same which we have created in EFS Volume in AWS Cloud. Change the fileSystemId to your EFS Volume ID which you have created in AWS Cloud.
+  # file system is not automatically created, we should create it manually in AWS Cloud and then use the file system ID in the storage class manifest to provision the volumes dynamically. 
+  basePath: "/expense" # here basePath is the directory path in the EFS volume where the data will be stored. You can change the basePath as per your requirement. If you want to use the root directory of the EFS volume then you can remove this line and it will use the root directory of the EFS volume to store the data.
+
